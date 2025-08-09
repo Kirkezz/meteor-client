@@ -40,6 +40,7 @@ import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
@@ -48,8 +49,8 @@ public class MeteorClient implements ClientModInitializer {
     public static final String MOD_ID = "meteor-client";
     public static final ModMetadata MOD_META;
     public static final String NAME;
-    public static final  Version VERSION;
-    public static final  String DEV_BUILD;
+    public static final Version VERSION;
+    public static final String BUILD_NUMBER;
 
     public static MeteorClient INSTANCE;
     public static MeteorAddon ADDON;
@@ -72,7 +73,7 @@ public class MeteorClient implements ClientModInitializer {
         if (versionString.equals("${version}")) versionString = "0.0.0";
 
         VERSION = new Version(versionString);
-        DEV_BUILD = MOD_META.getCustomValue(MeteorClient.MOD_ID + ":devbuild").getAsString();
+        BUILD_NUMBER = MOD_META.getCustomValue(MeteorClient.MOD_ID + ":build_number").getAsString();
     }
 
     @Override
@@ -82,10 +83,15 @@ public class MeteorClient implements ClientModInitializer {
             return;
         }
 
-        LOG.info("Initializing {}", NAME);
-
         // Global minecraft client accessor
         mc = MinecraftClient.getInstance();
+
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            LOG.info("Force loading mixins");
+            MixinEnvironment.getCurrentEnvironment().audit();
+        }
+
+        LOG.info("Initializing {}", NAME);
 
         // Pre-load
         if (!FOLDER.exists()) {
